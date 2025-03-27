@@ -1,10 +1,7 @@
 package org.cloudbus.cloudsim.examples;
 
 import java.util.*;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Vm;
 
@@ -54,7 +51,6 @@ public class MOICS {
     public Population initPopulation(int chromosomeLength, int dataCenterIterator) {
         return new Population(populationSize, chromosomeLength, dataCenterIterator);
     }
-
     
  // Evaluasi fitness
     public void evaluateFitness(Population population, int dataCenterIterator, int cloudletIteration) {
@@ -69,7 +65,7 @@ public class MOICS {
         double totalExecutionTime = 0;
         double totalCost = 0;
         int iterator = 0;
-        dataCenterIterator--; // Convert to 0-based index
+        dataCenterIterator--; 
 
         int startIndex = dataCenterIterator * 9 + cloudletIteration * 54;
         int endIndex = (dataCenterIterator + 1) * 9 + cloudletIteration * 54;
@@ -136,50 +132,7 @@ public class MOICS {
         double v = Math.abs(rand.nextGaussian());
         return u / Math.pow(v, 1 / beta);
     }
-    
-    
-//    // Abandon sarang terburuk
-//    public void abandonWorstNests(Population population, int dataCenterIterator) {
-//    	Random rand = new Random();
-////    	int dcIndex = dataCenterIterator - 1;
-//    	
-//    	// Hitung jumlah sarang yang harus diabaikan
-//    	int worstNestCount = (int) (pa * populationSize);
-//    	
-//    	// Urutkan individu berdasarkan fitness multi-objective
-//        List<Individual> individuals = Arrays.asList(population.getIndividuals());
-//        individuals.sort((a, b) -> {
-//            double[] aFitness = a.getFitnessValues();
-//            double[] bFitness = b.getFitnessValues();
-//            return Double.compare(aFitness[0] + aFitness[1], bFitness[0] + bFitness[1]);
-//        });
-//    	
-//    	// Abandon (Pa)/2 worst nests secara random
-//    	for (int i = 0; i < worstNestCount / 2; i++) {
-//    		int randomIndex = rand.nextInt(worstNestCount);
-//    		individuals.get(randomIndex).randomizeChromosome(dataCenterIterator);
-//    	}
-//    	
-//    	// Abandon (Pa)/2 worst nests melalui mutasi
-//    	for (int i = worstNestCount / 2; i < worstNestCount; i++) {
-//    		mutate(individuals.get(i), dataCenterIterator);
-//    	}
-//    }
-//    
-//    // Mutasi untuk diversifikasi pencarian
-//    public void mutate(Individual individual, int dataCenterIterator) {
-//        Random rand = new Random();
-//        int[] chromosome = individual.getChromosome();
-//
-//        for (int i = 0; i < chromosome.length; i++) {
-//            if (rand.nextDouble() < 0.1) { // Probabilitas mutasi
-//                chromosome[i] = rand.nextInt((dataCenterIterator * 9) - ((dataCenterIterator - 1) * 9)) + ((dataCenterIterator - 1) * 9);
-//            }
-//        }
-//        individual.setChromosome(chromosome);
-//    }
-    
-    
+      
     public void abandonWorstNests(Population population, int dataCenterIterator) {
         Random rand = new Random();
         int worstNestCount = (int) (pa * populationSize);
@@ -192,7 +145,7 @@ public class MOICS {
         });
 
         // Pertahankan beberapa individu terbaik
-        int preserveCount = (int) (0.1 * populationSize); // Pertahankan 10% terbaik
+        int preserveCount = (int) (0.2 * populationSize); // Pertahankan 20% terbaik
         List<Individual> preservedIndividuals = individuals.subList(0, preserveCount);
 
         // Abandon (Pa)/2 worst nests secara random dari individu yang tidak dipertahankan
@@ -209,10 +162,10 @@ public class MOICS {
         }
 
         // Gabungkan individu terbaik kembali ke populasi
-//        population.setIndividuals(preservedIndividuals.toArray(new Individual[0]));
-//        population.addAllIndividuals(remainingIndividuals.toArray(new Individual[0]));
+        population.setIndividuals(preservedIndividuals.toArray(new Individual[0]));
+        population.addAllIndividuals(remainingIndividuals.toArray(new Individual[0]));
     }
-    
+     
     public void mutate(Individual individual, int dataCenterIterator) {
         Random rand = new Random();
         int[] chromosome = individual.getChromosome();
@@ -228,7 +181,7 @@ public class MOICS {
         }
         individual.setChromosome(chromosome);
     }
-
+    
     // Simpan solusi terbaik
     public void keepBestSolutions(Population population, int dataCenterIterator) {
         int dcIndex = dataCenterIterator - 1;
@@ -238,10 +191,22 @@ public class MOICS {
             ParetoUtils.addToParetoFront(paretoFront, individual);
         }
 
-        // Pilih solusi terbaik dari Pareto Front
+//        // Pilih solusi terbaik dari Pareto Front
+//        if (!paretoFront.isEmpty()) {
+//            Individual bestIndividual = Collections.max(paretoFront, Comparator.comparingDouble(ind -> 1.0 / (ind.getFitnessValues()[0] + ind.getFitnessValues()[1])));
+//            globalBestFitnesses[dcIndex] = 1.0 / (bestIndividual.getFitnessValues()[0] + bestIndividual.getFitnessValues()[1]);
+//            globalBestPositions[dcIndex] = bestIndividual.getChromosome().clone();
+//        }
+     // Pilih solusi terbaik dari Pareto Front
         if (!paretoFront.isEmpty()) {
-            Individual bestIndividual = Collections.max(paretoFront, Comparator.comparingDouble(ind -> 1.0 / (ind.getFitnessValues()[0] + ind.getFitnessValues()[1])));
-            globalBestFitnesses[dcIndex] = 1.0 / (bestIndividual.getFitnessValues()[0] + bestIndividual.getFitnessValues()[1]);
+            // Memperbarui logika untuk memilih solusi terbaik
+            Individual bestIndividual = Collections.max(paretoFront, Comparator.comparingDouble(ind -> {
+                double[] fitnessValues = ind.getFitnessValues();
+                return fitnessValues[0] + fitnessValues[1]; // Menggunakan penjumlahan untuk mendapatkan nilai yang lebih tinggi
+            }));
+            
+            // Memperbarui globalBestFitnesses dengan nilai yang lebih tinggi
+            globalBestFitnesses[dcIndex] = bestIndividual.getFitnessValues()[0] + bestIndividual.getFitnessValues()[1];
             globalBestPositions[dcIndex] = bestIndividual.getChromosome().clone();
         }
     }
@@ -274,7 +239,6 @@ public class MOICS {
                     it.remove();
                 }
             }
-
             if (!dominated) {
                 paretoFront.add(individual);
             }
@@ -282,7 +246,7 @@ public class MOICS {
     }
 
     // OBL (Opposition-Based Learning)
-    public void applyOBL(Population population, int dataCenterIterator) {
+    public void applyOBL(Population population, int dataCenterIterator,  int cloudletIteration) {
         int dcIndex = dataCenterIterator - 1;
         int[] eliteSolution = globalBestPositions[dcIndex];
         int minVM = (dataCenterIterator - 1) * 9;
@@ -298,19 +262,51 @@ public class MOICS {
             }
             
             // Evaluasi solusi oposisi
-            Individual oppositeInd = new Individual(oppositeSolution);
-            double[] oppositeFitnessValues = calculateMultiObjectiveFitness(oppositeInd, dataCenterIterator, 0);
+            Individual oppositeInd = new Individual(oppositeSolution, cloudletList);
+            double[] oppositeFitnessValues = calculateMultiObjectiveFitness(oppositeInd, dataCenterIterator, cloudletIteration);
             
             // Misalkan Anda ingin menggunakan totalExecutionTime sebagai fitness
-            double oppositeFitness = oppositeFitnessValues[1]; // atau gunakan [1] untuk totalCost
+//            double oppositeFitness = oppositeFitnessValues[1]; // atau gunakan [1] untuk totalCost
+            
+            double oppositeFitness = 1.0 / (oppositeFitnessValues[0] + oppositeFitnessValues[1]);
+            double currentFitness = 1.0 / (individual.getFitnessValues()[0] + individual.getFitnessValues()[1]);
             
             // Bandingkan dengan individu saat ini dan ambil yang lebih baik
-            if (oppositeFitness < individual.getFitness()) { // Pastikan perbandingan sesuai dengan tujuan Anda
+            if (oppositeFitness > currentFitness) {
                 individual.setChromosome(oppositeSolution);
-                individual.setFitness(oppositeFitness);
+                individual.setFitnessValues(oppositeFitnessValues[0], oppositeFitnessValues[1]);
             }
         }
     }
+    
+//    public void applyOBL(Population population, int dataCenterIterator, int cloudletIteration) {
+//        int dcIndex = dataCenterIterator - 1;
+//        int[] eliteSolution = globalBestPositions[dcIndex];
+//        int minVM = (dataCenterIterator - 1) * 9;
+//        int maxVM = dataCenterIterator * 9 - 1;
+//        for (Individual individual : population.getIndividuals()) {
+//            int[] oppositeSolution = new int[eliteSolution.length];
+//            // Menghitung solusi lawan berdasarkan rumus OBL
+//            for (int i = 0; i < eliteSolution.length; i++) {
+//                oppositeSolution[i] = minVM + maxVM - individual.getGene(i);
+//                oppositeSolution[i] = clampVM(oppositeSolution[i], dataCenterIterator);
+//            }
+//            // Evaluasi solusi oposisi
+//            Individual oppositeInd = new Individual(oppositeSolution, cloudletList);
+//            double[] oppositeFitnessValues = calculateMultiObjectiveFitness(oppositeInd, dataCenterIterator, cloudletIteration);
+//            double oppositeMakespan = oppositeFitnessValues[0];
+//            double oppositeCost = oppositeFitnessValues[1];
+//            double[] currentFitnessValues = individual.getFitnessValues();
+//            double currentMakespan = currentFitnessValues[0];
+//            double currentCost = currentFitnessValues[1];
+//            // Bandingkan dengan individu saat ini dan ambil yang lebih baik
+//            if (isBetter(oppositeMakespan, oppositeCost, currentMakespan, currentCost)) {
+//                individual.setChromosome(oppositeSolution); 
+//                individual.setFitnessValues(oppositeMakespan, oppositeCost);
+//            }
+//        }
+//    }
+
 
     // Helper function: Batasi VM dalam rentang data center
     private int clampVM(int vm, int dataCenterIterator) {
@@ -318,13 +314,18 @@ public class MOICS {
         int max = dataCenterIterator * 9 - 1;
         return Math.min(Math.max(vm, min), max);
     }
-
-    // Helper function: Hitung biaya
+    
     private double calculateCost(int vmId, Cloudlet cloudlet) {
         Vm vm = vmList.get(vmId);
         double costPerMips = vm.getCostPerMips();
+        double costPerMem = 0.05;
+        double costPerBw = 0.1;
         double executionTime = cloudlet.getCloudletLength() / vm.getMips();
-        return costPerMips * executionTime;
+        double memoryUsage = vm.getRam();
+        double bandwidthUsage = 1000; // Asumsi bandwidth usage
+        double memoryCost = memoryUsage * costPerMem;
+        double bandwidthCost = bandwidthUsage * costPerBw;
+        return costPerMips * executionTime + memoryCost + bandwidthCost;
     }
 
     // Helper function: Dapatkan MIPS VM
@@ -345,5 +346,15 @@ public class MOICS {
     // Getter solusi terbaik
     public int[] getBestVmAllocationForDatacenter(int dataCenterIterator) {
         return globalBestPositions[dataCenterIterator - 1];
+    }
+    
+    public double getBestFitnessForDatacenter(int dataCenterIterator) {
+        return globalBestFitnesses[dataCenterIterator - 1];
+    }
+    
+    private boolean isBetter(double makespan1, double cost1, double makespan2, double cost2) {
+        return (makespan1 < makespan2 && cost1 < cost2) ||
+               (makespan1 < makespan2 && cost1 == cost2) ||
+               (makespan1 == makespan2 && cost1 < cost2);
     }
 }

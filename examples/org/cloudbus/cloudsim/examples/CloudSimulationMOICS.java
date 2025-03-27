@@ -4,7 +4,10 @@ import java.util.Locale;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.PrintStream;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -83,16 +86,15 @@ public class CloudSimulationMOICS {
                 
                 // MOICS Parameters
                 int Imax = 5;
-                int populationSize = 30;
+                int populationSize = 100;
                 double pa = 0.25;
 
+                MOICS moics = new MOICS (Imax, populationSize, pa, cloudletList, vmList);
                 
-                MOICS moics = new MOICS(Imax, populationSize, pa, cloudletList, vmList);
+                int cloudletLoopingNumber = cloudletNumber / vmNumber - 1;
                 
-                int cloudletLoopingNumber = cloudletNumber / vmNumber;
-                
-                for(int cloudletIteration = 0; cloudletIteration <= cloudletLoopingNumber; cloudletIteration++) {
-                    System.out.println("Cloudlet Iteration: " + cloudletIteration);
+                for(int cloudletIterator = 0; cloudletIterator <= cloudletLoopingNumber; cloudletIterator++) {
+                    System.out.println("Cloudlet Iteration: " + cloudletIterator);
                     
                     for(int dataCenterIterator = 1; dataCenterIterator <= 6; dataCenterIterator++) {
                         System.out.println("Processing DataCenter: " + dataCenterIterator);
@@ -101,22 +103,22 @@ public class CloudSimulationMOICS {
                         Population population = moics.initPopulation(cloudletNumber, dataCenterIterator);
                         
                         // MOICS Optimization Loop
-                        for(int iteration = 1; iteration < Imax; iteration++) {
-                            moics.evaluateFitness(population, dataCenterIterator, cloudletIteration);
+                        for(int iteration = 1; iteration <= Imax; iteration++) {
+                        	moics.evaluateFitness(population, dataCenterIterator, cloudletIterator);
                             moics.levyFlightUpdate(population, dataCenterIterator);
                             moics.abandonWorstNests(population, dataCenterIterator);
                             moics.keepBestSolutions(population, dataCenterIterator);
-//                            moics.applyOBL(population, dataCenterIterator);
+//                            moics.applyOBL(population, dataCenterIterator, cloudletIterator);
                             
                             System.out.println("Iteration " + iteration + " Best Fitness for DC" + 
-                                dataCenterIterator + ": " + moics.getBestVmAllocationForDatacenter(dataCenterIterator));
+                                dataCenterIterator + ": " + moics.getBestFitnessForDatacenter(dataCenterIterator));
                         }
                         
                         // Bind cloudlets to best VMs
                         int[] bestSolution = moics.getBestVmAllocationForDatacenter(dataCenterIterator);
 
-                        int startAssigner = (dataCenterIterator - 1) * 9 + cloudletIteration * 54;
-                        int endAssigner = dataCenterIterator * 9 + cloudletIteration * 54;
+                        int startAssigner = 0 + (dataCenterIterator - 1) * 9 + cloudletIterator * 54;
+                        int endAssigner = 9 + (dataCenterIterator - 1) * 9 + cloudletIterator * 54;
 
                         // Pastikan endAssigner tidak melebihi ukuran cloudletList
                         if (endAssigner > cloudletList.size()) {
@@ -158,6 +160,12 @@ public class CloudSimulationMOICS {
                 // Print results
                 List<Cloudlet> resultList = broker.getCloudletReceivedList();
                 printCloudletList(resultList);
+                
+                String outputFileName = "cloudlet_output_default.txt";
+                if (args.length > 0) {
+                    outputFileName = args[0]; // Ambil nama file dari argumen
+                }
+                saveCloudletListToFile(resultList, outputFileName);
                 
                 Log.printLine("MOICS Cloud Simulation finished!");
             } catch (Exception e) {
@@ -217,7 +225,7 @@ public class CloudSimulationMOICS {
     ArrayList<Double> seed = new ArrayList<Double>();
     try {
 //      File fobj = new File(System.getProperty("user.dir") + "/datasets/randomSimple/RandSimple"+bot+"000.txt");
-//         File fobj = new File(System.getProperty("user.dir") + "/datasets/randomStratified/RandStratified"+bot+"000.txt");
+//      File fobj = new File(System.getProperty("user.dir") + "/datasets/randomStratified/RandStratified"+bot+"000.txt");
       File fobj = new File(System.getProperty("user.dir") + "/datasets/SDSC/SDSC7395.txt");
       java.util.Scanner readFile = new java.util.Scanner(fobj);
 
@@ -440,5 +448,132 @@ public class CloudSimulationMOICS {
     Log.printLine(String.format("Total Energy Consumption: %,2f  kWh",
         (datacenter1.getPower() + datacenter2.getPower() + datacenter3.getPower() + datacenter4.getPower()
             + datacenter5.getPower() + datacenter6.getPower()) / (3600 * 1000))); 	
+    
   }
+  
+  private static void saveCloudletListToFile(List<Cloudlet> list, String fileName) {
+	    try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+	        int size = list.size();
+	        Cloudlet cloudlet = null;
+	        String indent = "    ";
+	        
+	        // Menulis header
+	        writer.write("========== OUTPUT ==========");
+	        writer.newLine();
+	        writer.write("Cloudlet ID" + indent + "STATUS" + indent +
+	            "Data center ID" + indent + "VM ID" + indent + "Time"
+	            + indent + "Start Time" + indent + "Finish Time" + indent + "Waiting Time");
+	        writer.newLine();
+
+	        double waitTimeSum = 0.0;
+	        double CPUTimeSum = 0.0;
+	        int totalValues = 0;
+	        DecimalFormat dft = new DecimalFormat("###,##");
+	        double response_time[] = new double[size];
+
+	        // Menulis status setiap cloudlet
+	        for (int i = 0; i < size; i++) {
+	            cloudlet = list.get(i);
+	            if (cloudlet == null || cloudlet.getCloudletStatus() != Cloudlet.SUCCESS) {
+	                writer.write("Cloudlet " + i + " is null or not completed. Skipping...");
+	                writer.newLine();
+	                continue;
+	            }
+	            if (cloudlet.getCloudletStatus() == Cloudlet.SUCCESS) {
+	                writer.write(cloudlet.getCloudletId() + indent + "SUCCESS" + indent +
+	                    (cloudlet.getResourceId() - 1) + indent + indent + cloudlet.getVmId() +
+	                    indent + indent + dft.format(cloudlet.getActualCPUTime()) + indent + indent
+	                    + dft.format(cloudlet.getExecStartTime()) +
+	                    indent + indent + dft.format(cloudlet.getFinishTime()) + indent + indent + indent
+	                    + dft.format(cloudlet.getWaitingTime()));
+	                writer.newLine();
+
+	                CPUTimeSum += cloudlet.getActualCPUTime();
+	                waitTimeSum += cloudlet.getWaitingTime();
+	                totalValues++;
+	                response_time[i] = cloudlet.getActualCPUTime();
+	            }
+	        }
+
+	        // Statistik tambahan
+	        DoubleSummaryStatistics stats = DoubleStream.of(response_time).summaryStatistics();
+	        writer.newLine();
+	        writer.write(String.format("min = %,6f", stats.getMin()));
+	        writer.newLine();
+	        writer.write(String.format("Response_Time: %,6f", CPUTimeSum / totalValues));
+	        writer.newLine();
+	        writer.write(String.format("TotalCPUTime : %,6f", CPUTimeSum));
+	        writer.newLine();
+	        writer.write("TotalWaitTime : " + waitTimeSum);
+	        writer.newLine();
+	        writer.write("TotalCloudletsFinished : " + totalValues);
+	        writer.newLine();
+	        writer.write(String.format("AverageCloudletsFinished : %,6f", (CPUTimeSum / totalValues)));
+	        writer.newLine();
+
+	        // Makespan
+	        double makespan = 0.0;
+	        double makespan_total = makespan + cloudlet.getFinishTime();
+	        writer.write(String.format("Makespan: %,f", makespan_total));
+	        writer.newLine();
+
+	        // Total Cost
+	        double totalCost = 0.0;
+	        for (Cloudlet cl : list) {
+	            if (cl.getCloudletStatus() == Cloudlet.SUCCESS) {
+	                Vm vm = vmList.get(cl.getVmId());
+	                double executionTime = cl.getActualCPUTime();
+	                double memoryUsage = vm.getRam(); // Menggunakan RAM dari VM
+	                long bw = 1000;
+	                double costPerMips = vm.getCostPerMips();
+	                double costPerMem = 0.05;
+	                double costPerBw = 0.1;
+
+	                // Hitung biaya untuk cloudlet
+	                double cloudletCost = (executionTime * costPerMips) +
+	                        (memoryUsage * costPerMem) +
+	                        (bw * costPerBw);
+	                totalCost += cloudletCost;
+	            }
+	        }
+	        writer.write(String.format("Total Cost: $%,2f", totalCost));
+	        writer.newLine();
+
+	        // Average Waiting Time
+	        double avgWT = cloudlet.getWaitingTime() / size;
+	        writer.write(String.format("Average Waiting time: %,6f", avgWT));
+	        writer.newLine();
+
+	        // Throughput
+	        double maxFT = 0.0;
+	        for (int i = 0; i < size; i++) {
+	            double currentFT = cloudletList.get(i).getFinishTime();
+	            if (currentFT > maxFT) {
+	                maxFT = currentFT;
+	            }
+	        }
+	        double throughput = size / maxFT;
+	        writer.write(String.format("Throughput: %,9f", throughput));
+	        writer.newLine();
+
+	        // CPU Resource Utilization
+	        double resource_utilization = (CPUTimeSum / (makespan_total * 54)) * 100;
+	        writer.write(String.format("Resource Utilization: %,f", resource_utilization));
+	        writer.newLine();
+
+	        // Energy Consumption
+	        writer.write(String.format("Total Energy Consumption: %,2f kWh",
+	            (datacenter1.getPower() + datacenter2.getPower() + datacenter3.getPower() + datacenter4.getPower()
+	                + datacenter5.getPower() + datacenter6.getPower()) / (3600 * 1000)));
+	        writer.newLine();
+
+	        writer.write("Output saved successfully to " + fileName);
+	        writer.newLine();
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        Log.printLine("Error saving cloudlet list to file: " + fileName);
+	    }
+	}
+
 }

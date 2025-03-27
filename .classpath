@@ -7,10 +7,10 @@
 	</classpathentry>
 	<classpathentry kind="src" path="examples"/>
 	<classpathentry kind="src" path="sources"/>
-	<classpathentry exported="true" kind="lib" path="jars/cloudsim-3.0.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="jars/cloudsim-3.0.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="jars/cloudsim-examples-3.0.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="jars/cloudsim-examples-3.0.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="D:/`Jezz/CloudSIM/commons-math-4.0-beta1/commons-math4-core-4.0-beta1.jar"/>
+	<classpathentry kind="lib" path="jars/cloudsim-3.0.3.jar"/>
+	<classpathentry kind="lib" path="jars/cloudsim-3.0.3-sources.jar"/>
+	<classpathentry kind="lib" path="jars/cloudsim-examples-3.0.3.jar"/>
+	<classpathentry kind="lib" path="jars/cloudsim-examples-3.0.3-sources.jar"/>
+	<classpathentry kind="lib" path="D:/`Jezz/CloudSIM/commons-math-4.0-beta1/commons-math4-core-4.0-beta1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

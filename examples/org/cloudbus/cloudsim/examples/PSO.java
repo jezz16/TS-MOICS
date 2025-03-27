@@ -154,12 +154,24 @@ public class PSO {
         return mips;
     }
 
+//    private double calculateCost(Vm vm, Cloudlet cloudlet) {
+//      double costPerMips = vm.getCostPerMips();
+//      double cloudletLength = cloudlet.getCloudletLength();
+//      double mips = vm.getMips();
+//      double executionTime = cloudletLength / mips;
+//      return costPerMips * executionTime;
+//    }
+    
     private double calculateCost(Vm vm, Cloudlet cloudlet) {
-      double costPerMips = vm.getCostPerMips();
-      double cloudletLength = cloudlet.getCloudletLength();
-      double mips = vm.getMips();
-      double executionTime = cloudletLength / mips;
-      return costPerMips * executionTime;
+        double costPerMips = vm.getCostPerMips();
+        double costPerMem = 0.05;
+        double costPerBw = 0.1;
+        double executionTime = cloudlet.getCloudletLength() / vm.getMips();
+        double memoryUsage = vm.getRam();
+        double bandwidthUsage = 1000; // Asumsi bandwidth usage
+        double memoryCost = memoryUsage * costPerMem;
+        double bandwidthCost = bandwidthUsage * costPerBw;
+        return costPerMips * executionTime + memoryCost + bandwidthCost;
     }
 
     private double calculateMakespanFitness(double totalExecutionTime) {
