@@ -12,7 +12,7 @@ public class RunCloudSimulation {
             String outputFileName = "cloudlet_output_run_" + i + ".txt"; // Nama file unik untuk setiap iterasi
             System.out.println("Running simulation iteration: " + i + ", Output file: " + outputFileName);
 
-            // Jalankan simulasi dengan nama file sebagai argumen
+            // Jalankan simulasi dengan nama file sebagai argumen  
             String[] simulationArgs = {outputFileName};
             CloudSimulationMOICS.main(simulationArgs);
         }

@@ -46,7 +46,7 @@ public class CalculateAverageMetrics {
         System.out.printf("Average Throughput: %.9f%n", avgThroughput);
         System.out.printf("Average Resource Utilization: %.6f%n", avgResourceUtilization);
         System.out.printf("Average Energy Consumption: %.2f kWh%n", avgEnergyConsumption);
-        System.out.printf("Average Metric for MOICS SDSC");
+        System.out.printf("Average Metric for MOICS OBL Stratified 8k");
     }
 
     private static void extractMetricsFromFile(String fileName, List<Double> makespans, List<Double> totalCosts,
@@ -77,7 +77,8 @@ public class CalculateAverageMetrics {
         // Ekstrak nilai numerik dari baris teks
         String[] parts = line.split(":");
         if (parts.length > 1) {
-            String valuePart = parts[1].trim().replaceAll("[^\\d.]", "");
+            String valuePart = parts[1].trim().replaceAll("[^\\d.]","");
+//            
             return Double.parseDouble(valuePart);
         }
         return 0.0;

@@ -191,18 +191,12 @@ public class MOICS {
             ParetoUtils.addToParetoFront(paretoFront, individual);
         }
 
-//        // Pilih solusi terbaik dari Pareto Front
-//        if (!paretoFront.isEmpty()) {
-//            Individual bestIndividual = Collections.max(paretoFront, Comparator.comparingDouble(ind -> 1.0 / (ind.getFitnessValues()[0] + ind.getFitnessValues()[1])));
-//            globalBestFitnesses[dcIndex] = 1.0 / (bestIndividual.getFitnessValues()[0] + bestIndividual.getFitnessValues()[1]);
-//            globalBestPositions[dcIndex] = bestIndividual.getChromosome().clone();
-//        }
-     // Pilih solusi terbaik dari Pareto Front
+        // Pilih solusi terbaik dari Pareto Front
         if (!paretoFront.isEmpty()) {
             // Memperbarui logika untuk memilih solusi terbaik
             Individual bestIndividual = Collections.max(paretoFront, Comparator.comparingDouble(ind -> {
                 double[] fitnessValues = ind.getFitnessValues();
-                return fitnessValues[0] + fitnessValues[1]; // Menggunakan penjumlahan untuk mendapatkan nilai yang lebih tinggi
+                return fitnessValues[0] + fitnessValues[1];
             }));
             
             // Memperbarui globalBestFitnesses dengan nilai yang lebih tinggi
@@ -245,68 +239,34 @@ public class MOICS {
         }
     }
 
-    // OBL (Opposition-Based Learning)
-    public void applyOBL(Population population, int dataCenterIterator,  int cloudletIteration) {
+    // OBL (Opposition-Based Learning)    
+    public void applyOBL(Population population, int dataCenterIterator, int cloudletIteration) {
         int dcIndex = dataCenterIterator - 1;
         int[] eliteSolution = globalBestPositions[dcIndex];
         int minVM = (dataCenterIterator - 1) * 9;
         int maxVM = dataCenterIterator * 9 - 1;
-        
         for (Individual individual : population.getIndividuals()) {
             int[] oppositeSolution = new int[eliteSolution.length];
-            
             // Menghitung solusi lawan berdasarkan rumus OBL
             for (int i = 0; i < eliteSolution.length; i++) {
                 oppositeSolution[i] = minVM + maxVM - individual.getGene(i);
                 oppositeSolution[i] = clampVM(oppositeSolution[i], dataCenterIterator);
             }
-            
             // Evaluasi solusi oposisi
             Individual oppositeInd = new Individual(oppositeSolution, cloudletList);
             double[] oppositeFitnessValues = calculateMultiObjectiveFitness(oppositeInd, dataCenterIterator, cloudletIteration);
-            
-            // Misalkan Anda ingin menggunakan totalExecutionTime sebagai fitness
-//            double oppositeFitness = oppositeFitnessValues[1]; // atau gunakan [1] untuk totalCost
-            
-            double oppositeFitness = 1.0 / (oppositeFitnessValues[0] + oppositeFitnessValues[1]);
-            double currentFitness = 1.0 / (individual.getFitnessValues()[0] + individual.getFitnessValues()[1]);
-            
+            double oppositeMakespan = oppositeFitnessValues[0];
+            double oppositeCost = oppositeFitnessValues[1];
+            double[] currentFitnessValues = individual.getFitnessValues();
+            double currentMakespan = currentFitnessValues[0];
+            double currentCost = currentFitnessValues[1];
             // Bandingkan dengan individu saat ini dan ambil yang lebih baik
-            if (oppositeFitness > currentFitness) {
-                individual.setChromosome(oppositeSolution);
-                individual.setFitnessValues(oppositeFitnessValues[0], oppositeFitnessValues[1]);
+            if (isBetter(oppositeMakespan, oppositeCost, currentMakespan, currentCost)) {
+                individual.setChromosome(oppositeSolution); 
+                individual.setFitnessValues(oppositeMakespan, oppositeCost);
             }
         }
     }
-    
-//    public void applyOBL(Population population, int dataCenterIterator, int cloudletIteration) {
-//        int dcIndex = dataCenterIterator - 1;
-//        int[] eliteSolution = globalBestPositions[dcIndex];
-//        int minVM = (dataCenterIterator - 1) * 9;
-//        int maxVM = dataCenterIterator * 9 - 1;
-//        for (Individual individual : population.getIndividuals()) {
-//            int[] oppositeSolution = new int[eliteSolution.length];
-//            // Menghitung solusi lawan berdasarkan rumus OBL
-//            for (int i = 0; i < eliteSolution.length; i++) {
-//                oppositeSolution[i] = minVM + maxVM - individual.getGene(i);
-//                oppositeSolution[i] = clampVM(oppositeSolution[i], dataCenterIterator);
-//            }
-//            // Evaluasi solusi oposisi
-//            Individual oppositeInd = new Individual(oppositeSolution, cloudletList);
-//            double[] oppositeFitnessValues = calculateMultiObjectiveFitness(oppositeInd, dataCenterIterator, cloudletIteration);
-//            double oppositeMakespan = oppositeFitnessValues[0];
-//            double oppositeCost = oppositeFitnessValues[1];
-//            double[] currentFitnessValues = individual.getFitnessValues();
-//            double currentMakespan = currentFitnessValues[0];
-//            double currentCost = currentFitnessValues[1];
-//            // Bandingkan dengan individu saat ini dan ambil yang lebih baik
-//            if (isBetter(oppositeMakespan, oppositeCost, currentMakespan, currentCost)) {
-//                individual.setChromosome(oppositeSolution); 
-//                individual.setFitnessValues(oppositeMakespan, oppositeCost);
-//            }
-//        }
-//    }
-
 
     // Helper function: Batasi VM dalam rentang data center
     private int clampVM(int vm, int dataCenterIterator) {
