@@ -46,7 +46,7 @@ public class CalculateAverageMetrics {
         System.out.printf("Average Throughput: %.9f%n", avgThroughput);
         System.out.printf("Average Resource Utilization: %.6f%n", avgResourceUtilization);
         System.out.printf("Average Energy Consumption: %.2f kWh%n", avgEnergyConsumption);
-        System.out.printf("Average Metric for MOICS OBL Stratified 8k");
+        System.out.printf("Average Metric for CS LowTaskLength 7k");
     }
 
     private static void extractMetricsFromFile(String fileName, List<Double> makespans, List<Double> totalCosts,

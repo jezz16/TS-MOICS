@@ -41,7 +41,7 @@ public class CloudSimulationCS {
     private static PowerDatacenter datacenter1, datacenter2, datacenter3, datacenter4, datacenter5, datacenter6;
     private static List<Cloudlet> cloudletList;
     private static List<Vm> vmlist;
-    private static int bot = 10;
+    private static int bot = 7;
 
     public static void main(String[] args) {
         Locale.setDefault(new Locale("en", "US"));
@@ -74,8 +74,8 @@ public class CloudSimulationCS {
             DatacenterBroker broker = createBroker();
             int brokerId = broker.getId();
             int vmNumber = 54;
-            int cloudletNumber = 7395;
-//  		    int cloudletNumber = bot*1000;
+//            int cloudletNumber = 7395;
+  		    int cloudletNumber = bot*1000;
 
             vmlist = createVM(brokerId, vmNumber);
             cloudletList = createCloudlet(brokerId, cloudletNumber);
@@ -212,7 +212,8 @@ public class CloudSimulationCS {
     try {
 //       File fobj = new File(System.getProperty("user.dir") + "/datasets/randomSimple/RandSimple"+bot+"000.txt");
 //       File fobj = new File(System.getProperty("user.dir") + "/datasets/randomStratified/RandStratified"+bot+"000.txt");
-      File fobj = new File(System.getProperty("user.dir") + "/datasets/SDSC/SDSC7395.txt");
+//      File fobj = new File(System.getProperty("user.dir") + "/datasets/SDSC/SDSC7395.txt");
+    	File fobj = new File(System.getProperty("user.dir") + "/datasets/LowTaskLength/low_task_length_dataset"+bot+"000.txt");
       java.util.Scanner readFile = new java.util.Scanner(fobj);
 
       while (readFile.hasNextLine() && cloudletcount > 0) {

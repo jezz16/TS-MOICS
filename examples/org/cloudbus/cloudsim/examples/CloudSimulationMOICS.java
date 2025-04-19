@@ -43,7 +43,7 @@ public class CloudSimulationMOICS {
     	private static PowerDatacenter datacenter1, datacenter2, datacenter3, datacenter4, datacenter5, datacenter6;
         private static List<Cloudlet> cloudletList;
         private static List<Vm> vmList;
-        private static int bot = 8;
+        private static int bot = 1;
         
         public static void main(String[] args) {
         	Locale.setDefault(new Locale("en", "US"));
@@ -108,7 +108,7 @@ public class CloudSimulationMOICS {
                             moics.levyFlightUpdate(population, dataCenterIterator);
                             moics.abandonWorstNests(population, dataCenterIterator);
                             moics.keepBestSolutions(population, dataCenterIterator);
-                            moics.applyOBL(population, dataCenterIterator, cloudletIterator);
+//                             moics.applyOBL(population, dataCenterIterator, cloudletIterator);
                             
                             System.out.println("Iteration " + iteration + " Best Fitness for DC" + 
                                 dataCenterIterator + ": " + moics.getBestFitnessForDatacenter(dataCenterIterator));
@@ -225,8 +225,9 @@ public class CloudSimulationMOICS {
     ArrayList<Double> seed = new ArrayList<Double>();
     try {
 //      File fobj = new File(System.getProperty("user.dir") + "/datasets/randomSimple/RandSimple"+bot+"000.txt");
-      File fobj = new File(System.getProperty("user.dir") + "/datasets/randomStratified/RandStratified"+bot+"000.txt");
+//      File fobj = new File(System.getProperty("user.dir") + "/datasets/randomStratified/RandStratified"+bot+"000.txt");
 //      File fobj = new File(System.getProperty("user.dir") + "/datasets/SDSC/SDSC7395.txt");
+      File fobj = new File(System.getProperty("user.dir") + "/datasets/LowTaskLength/low_task_length_dataset"+bot+"000.txt");
       java.util.Scanner readFile = new java.util.Scanner(fobj);
 
       while (readFile.hasNextLine() && cloudletcount > 0) {
