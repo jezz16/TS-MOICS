@@ -6,7 +6,7 @@ package org.cloudbus.cloudsim.examples;
 
 public class RunCloudSimulation { 
 	public static void main(String[] args) {
-        int numberOfRuns = 10  ; // Jumlah iterasi simulasi
+        int numberOfRuns = 5; // Jumlah iterasi simulasi
 
         for (int i = 1; i <= numberOfRuns; i++) {
             String outputFileName = "cloudlet_output_run_" + i + ".txt"; // Nama file unik untuk setiap iterasi
@@ -14,7 +14,7 @@ public class RunCloudSimulation {
 
             // Jalankan simulasi dengan nama file sebagai argumen   
             String[] simulationArgs = {outputFileName};
-            CloudSimulationCS.main(simulationArgs);
+            CloudSimulationMOICS .main(simulationArgs); 
         }
         System.out.println("All simulations completed.");
     }

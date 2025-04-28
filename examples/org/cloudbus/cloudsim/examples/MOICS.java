@@ -100,7 +100,8 @@ public class MOICS {
             int[] newChromosome = individual.getChromosome().clone();
 
             for (int i = 0; i < newChromosome.length; i++) {
-                double step = levyFlightStep();
+                Random rand = new Random();
+            	double step = Math.pow(rand.nextGaussian(), 2);
                 int newVM = (int) (newChromosome[i] + step);
 
                 // Pastikan VM valid
@@ -119,20 +120,7 @@ public class MOICS {
             }
         }
     }
-    
-    // Langkah Lévy Flight
-    private double levyFlightStep() {
-        Random rand = new Random();
-        double sigma = Math.pow(
-        	    (gamma(1 + beta) * Math.sin(Math.PI * beta / 2)) /
-        	    (gamma((1 + beta) / 2) * beta * Math.pow(2, (beta - 1) / 2)),
-        	    1.0 / beta
-        	);
-        double u = rand.nextGaussian() * sigma;
-        double v = Math.abs(rand.nextGaussian());
-        return u / Math.pow(v, 1 / beta);
-    }
-      
+
     public void abandonWorstNests(Population population, int dataCenterIterator) {
         Random rand = new Random();
         int worstNestCount = (int) (pa * populationSize);
